@@ -1,41 +1,28 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue'
-import { sortProjectsByPriority, ProjectStatus } from '@tee/data'
+import { sortProjectsByPriority } from '@tee/data'
 import type { DataProject } from '@tee/data'
 import FiltreNaf from './filtre-naf.vue'
 import ListeProjets from './liste-projets.vue'
 
+const {
+  data: projects,
+  pending,
+  error
+} = await useFetch<DataProject[]>('/api/projects', {
+  transform: (data: any) => data.results || data
+})
+
 const selectedNaf = ref('')
-const projects = ref<DataProject[]>([
-  {
-    id: 1,
-    Nom: 'Projet A',
-    priorite: 10,
-    code_naf: ['85.59A'],
-    status: ProjectStatus.InProd,
-    themes: [],
-    mainTheme: '',
-    linkedProjects: [],
-    programs: []
-  } as unknown as DataProject,
-  {
-    id: 2,
-    Nom: 'Projet B',
-    priorite: 5,
-    code_naf: ['70.22Z'],
-    status: ProjectStatus.InProd,
-    themes: [],
-    mainTheme: '',
-    linkedProjects: [],
-    programs: []
-  } as unknown as DataProject
-])
 
 const projetsFiltres = computed(() => {
-  let filtered = [...projects.value]
+  const baseProjects = projects.value || []
+  let filtered = [...baseProjects]
+
   if (selectedNaf.value) {
     filtered = filtered.filter((p) => p.code_naf?.includes(selectedNaf.value))
   }
+
   return sortProjectsByPriority(filtered)
 })
 </script>
@@ -43,9 +30,28 @@ const projetsFiltres = computed(() => {
 <template>
   <div class="p-8">
     <h1 class="text-2xl font-bold mb-6 text-gray-800">Administration : Priorités NAF</h1>
+
     <FiltreNaf @change="(val: string) => (selectedNaf = val)" />
+
     <div class="mt-8">
-      <ListeProjets :projets="projetsFiltres" />
+      <div
+        v-if="pending"
+        class="text-center py-10 text-gray-500 italic"
+      >
+        Chargement des projets depuis Baserow...
+      </div>
+
+      <div
+        v-else-if="error"
+        class="bg-red-50 text-red-700 p-4 rounded-lg border border-red-200"
+      >
+        Erreur lors de la récupération : {{ error.statusMessage || "Impossible de contacter l'API" }}
+      </div>
+
+      <ListeProjets
+        v-else
+        :projets="projetsFiltres"
+      />
     </div>
   </div>
 </template>

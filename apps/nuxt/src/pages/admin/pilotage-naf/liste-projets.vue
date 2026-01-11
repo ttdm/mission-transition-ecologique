@@ -44,7 +44,7 @@ defineProps<{
         >
           <td class="px-6 py-4 text-gray-400 cursor-move">☰</td>
           <td class="px-6 py-4 font-medium text-gray-900">
-            {{ projet.Nom }}
+            {{ projet.Titre }}
           </td>
           <td class="px-6 py-4">
             <span

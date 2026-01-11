@@ -11,7 +11,7 @@ export interface DataProject
   programs: string[]
   redirectTo?: number
   status: ProjectStatus
-  Nom: string
+  Titre: string
   priorite?: number
   code_naf?: string[]
 }
