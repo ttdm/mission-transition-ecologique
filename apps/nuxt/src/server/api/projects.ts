@@ -10,9 +10,10 @@ export default defineEventHandler(async () => {
 
   return (response as any).results.map((row: any) => ({
     id: row.id,
-    Nom: row.Nom,
-    Titre: row.Titre || row.Nom || 'Projet sans nom',
-    status: row.Statut,
-    priorite: row.priorite ?? null
+    Nom: row.slug || '',
+    Titre: row.title || 'Projet sans nom',
+    status: row.status || 'autre',
+    priorite: row.priority?.default ?? null,
+    code_naf: row.sectors || []
   }))
 })

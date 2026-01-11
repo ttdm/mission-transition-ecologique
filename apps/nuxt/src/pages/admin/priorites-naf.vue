@@ -2,8 +2,8 @@
 import { ref, computed } from 'vue'
 import { sortProjectsByPriority } from '@tee/data'
 import type { DataProject } from '@tee/data'
-import FiltreNaf from './filtre-naf.vue'
-import ListeProjets from './liste-projets.vue'
+import FiltreNaf from '../../components/admin/filtre-naf.vue'
+import ListeProjets from '../../components/admin/liste-projets.vue'
 
 const {
   data: projects,
