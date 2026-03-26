@@ -66,16 +66,17 @@ export const useBaserowPriorities = (selectedNaf: Ref<string>) => {
     successMessage.value = ''
     const naf = selectedNaf.value
     if (!naf) {
-      project['Prio'] = value
+      project['Prio'] = parseFloat(value.toFixed(2))
     } else {
+      const rounded = parseFloat(value.toFixed(2))
       const priosSpec = project['Prios spécifiques'] || ''
       const priosArray = priosSpec.trim() ? priosSpec.trim().split(/\s+/) : []
       const prefix = `${naf}:`
-      const existingIndex = priosArray.findIndex((p) => p.startsWith(prefix))
+      const existingIndex = priosArray.findIndex((p: string) => p.startsWith(prefix))
       if (existingIndex !== -1) {
-        priosArray[existingIndex] = `${prefix}${value}`
+        priosArray[existingIndex] = `${prefix}${rounded}`
       } else {
-        priosArray.push(`${prefix}${value}`)
+        priosArray.push(`${prefix}${rounded}`)
       }
       project['Prios spécifiques'] = priosArray.join(' ')
     }
@@ -88,16 +89,16 @@ export const useBaserowPriorities = (selectedNaf: Ref<string>) => {
     try {
       // Seuls les projets réellement modifiés sont envoyés (comparaison avec le snapshot d'origine)
       const updates = projects.value
-        .filter((p) => {
+        .filter((p: BaserowProject) => {
           const orig = originalProjects.value.get(p.id)
           if (!orig) return false
           const prioChanged = parseFloat(p['Prio'] as string) !== parseFloat(orig['Prio'] as string)
           const priosSpecChanged = (p['Prios spécifiques'] || '') !== (orig['Prios spécifiques'] || '')
           return prioChanged || priosSpecChanged
         })
-        .map((p) => ({
+        .map((p: BaserowProject) => ({
           id: p.id,
-          Prio: parseFloat(p['Prio'] as string) || undefined,
+          Prio: parseFloat(parseFloat(p['Prio'] as string).toFixed(2)) || undefined,
           'Prios spécifiques': p['Prios spécifiques'] || ''
         }))
       await $fetch('/api/projects/priorities', { method: 'PATCH', body: { updates, nafCode: selectedNaf.value } })
