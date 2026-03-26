@@ -9,13 +9,13 @@ const getTheme = (project: BaserowProject): string => {
 
 export const useBaserowPriorities = (selectedNaf: Ref<string>) => {
   const projects = ref<BaserowProject[]>([])
+  // Snapshot des valeurs avant modification — sert à filtrer les projets changés
+  const originalProjects = ref<Map<number, { Prio: number | string; 'Prios spécifiques': string }>>(new Map())
   const loading = ref(false)
   const saving = ref(false)
   const successMessage = ref('')
   const errorMessage = ref('')
-  const modifiedIds = ref(new Set<number>())
-
-  const hasChanges = computed(() => modifiedIds.value.size > 0)
+  const hasChanges = ref(false)
 
   const getPriority = (project: BaserowProject): number => {
     const naf = selectedNaf.value
@@ -41,10 +41,14 @@ export const useBaserowPriorities = (selectedNaf: Ref<string>) => {
     loading.value = true
     errorMessage.value = ''
     successMessage.value = ''
-    modifiedIds.value = new Set()
+    hasChanges.value = false
     try {
       const data = await $fetch<BaserowProject[]>('/api/projects/priorities')
       projects.value = Array.isArray(data) ? data : []
+      // Capture l'état initial pour comparer lors de la sauvegarde
+      originalProjects.value = new Map(
+        projects.value.map((p) => [p.id, { 'Prio': p['Prio'] ?? 9999, 'Prios spécifiques': p['Prios spécifiques'] ?? '' }])
+      )
     } catch {
       errorMessage.value = 'Erreur lors du chargement des projets'
     } finally {
@@ -55,14 +59,11 @@ export const useBaserowPriorities = (selectedNaf: Ref<string>) => {
   const updatePriority = (projectId: number, newVal: string) => {
     const value = parseFloat(newVal)
     if (isNaN(value) || value < 0) return
-
     const project = projects.value.find((p) => p.id === projectId)
     if (!project) return
-
-    modifiedIds.value = new Set([...modifiedIds.value, projectId])
+    hasChanges.value = true
     errorMessage.value = ''
     successMessage.value = ''
-
     const naf = selectedNaf.value
     if (!naf) {
       project['Prio'] = value
@@ -85,22 +86,24 @@ export const useBaserowPriorities = (selectedNaf: Ref<string>) => {
     errorMessage.value = ''
     successMessage.value = ''
     try {
-      const modifiedProjects = projects.value.filter((p) => modifiedIds.value.has(p.id))
-      const updates = modifiedProjects.map((p) => ({
-        id: p.id,
-        Prio: typeof p['Prio'] === 'number' ? p['Prio'] : parseFloat(p['Prio'] as string) || undefined,
-        'Prios spécifiques': p['Prios spécifiques'] || ''
-      }))
-      await $fetch('/api/projects/priorities', {
-        method: 'PATCH',
-        body: { updates, nafCode: selectedNaf.value }
-      })
+      // Seuls les projets réellement modifiés sont envoyés (comparaison avec le snapshot d'origine)
+      const updates = projects.value
+        .filter((p) => {
+          const orig = originalProjects.value.get(p.id)
+          if (!orig) return false
+          const prioChanged = parseFloat(p['Prio'] as string) !== parseFloat(orig['Prio'] as string)
+          const priosSpecChanged = (p['Prios spécifiques'] || '') !== (orig['Prios spécifiques'] || '')
+          return prioChanged || priosSpecChanged
+        })
+        .map((p) => ({
+          id: p.id,
+          Prio: parseFloat(p['Prio'] as string) || undefined,
+          'Prios spécifiques': p['Prios spécifiques'] || ''
+        }))
+      await $fetch('/api/projects/priorities', { method: 'PATCH', body: { updates, nafCode: selectedNaf.value } })
       successMessage.value = 'Modifications enregistrées avec succès !'
-      modifiedIds.value = new Set()
-      setTimeout(() => {
-        successMessage.value = ''
-        refresh()
-      }, 1500)
+      hasChanges.value = false
+      setTimeout(() => { successMessage.value = ''; refresh() }, 1500)
     } catch {
       errorMessage.value = "Erreur lors de l'enregistrement"
     } finally {
