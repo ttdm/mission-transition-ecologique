@@ -1,131 +1,56 @@
 <template>
-  <tr
-    draggable="true"
-    class="project-row"
-    :class="{ 'is-dragging': isDragging, 'is-drop-target': isDropTarget }"
-    @dragstart="$emit('dragstart')"
-    @dragover.prevent="$emit('dragover')"
-    @dragleave="$emit('dragleave')"
-    @drop.prevent="$emit('drop')"
-    @dragend="$emit('dragend')"
-  >
-    <td class="col-drag">
-      <div class="drag-bar">
-        <span></span>
-        <span></span>
-        <span></span>
-      </div>
+  <tr draggable="true" class="priority-row"
+    :class="{ 'priority-row--dragging': isDragging, 'priority-row--target': isDropTarget }"
+    @dragstart="$emit('dragstart')" @dragover.prevent="$emit('dragover')" @dragleave="$emit('dragleave')"
+    @drop.prevent="$emit('drop')" @dragend="$emit('dragend')">
+    <td class="priority-drag-col">
+      <div class="priority-drag-handle"><span></span><span></span><span></span></div>
     </td>
-
-    <td class="td-prio">
-      <input
-        v-model.number="localValue"
-        type="number"
-        class="fr-input fr-input--sm"
-        step="0.01"
-        min="0"
-        @focus="isFocused = true"
-        @blur="isFocused = false; $emit('update', String(localValue))"
-        @keydown.enter="($event.target as HTMLInputElement).blur()"
-      />
-      <span v-if="isDropTarget && prospectiveScore !== null" class="score-preview">
-        → {{ prospectiveScore }}
-      </span>
+    <td style="position: relative">
+      <input v-model.number="localValue" type="number" class="fr-input priority-input" step="0.01" min="0"
+        @focus="isFocused = true" @blur="isFocused = false; $emit('update', String(localValue))"
+        @keydown.enter="($event.target as HTMLInputElement).blur()" />
+      <span v-if="isDropTarget && prospectiveScore !== null"
+        class="fr-badge fr-badge--info priority-score-preview">→ {{ prospectiveScore }}</span>
     </td>
-
-    <td class="fr-text--bold">
-      {{ project.Titre || project.title || project.slug }}
-    </td>
-
-    <td>
-      <span class="fr-badge fr-badge--sm fr-badge--purple-glycine">
-        {{ project.theme }}
-      </span>
-    </td>
-
-    <td class="fr-text--sm">
-      {{ fmt(project['Prio']) }}
-    </td>
+    <td class="fr-text--bold">{{ project.Titre || project.title || project.slug }}</td>
+    <td><span class="fr-badge fr-badge--sm fr-badge--purple-glycine">{{ project.theme }}</span></td>
+    <td class="fr-text--sm">{{ fmt(project['Prio']) }}</td>
   </tr>
 </template>
 
 <script setup lang="ts">
 import type { ProjectRow } from '~/types/baserow'
-
-const props = defineProps<{
-  project: ProjectRow
-  isDragging: boolean
-  isDropTarget: boolean
-  prospectiveScore: number | null
-}>()
-
-defineEmits<{
-  (e: 'update', v: string): void
-  (e: 'dragstart'): void
-  (e: 'dragover'): void
-  (e: 'dragleave'): void
-  (e: 'drop'): void
-  (e: 'dragend'): void
-}>()
-
+const props = defineProps<{ project: ProjectRow; isDragging: boolean; isDropTarget: boolean; prospectiveScore: number | null }>()
+defineEmits<{ (e: 'update', v: string): void; (e: 'dragstart'): void; (e: 'dragover'): void; (e: 'dragleave'): void; (e: 'drop'): void; (e: 'dragend'): void }>()
 const localValue = ref(props.project.currentPriority)
 const isFocused = ref(false)
-
-watch(() => props.project.currentPriority, (val) => {
-  if (!isFocused.value) localValue.value = val
-})
-
-const fmt = (s: unknown) => {
-  const v = parseFloat(s as string)
-  return isNaN(v) ? 'N/A' : v.toFixed(2)
-}
+watch(() => props.project.currentPriority, (val) => { if (!isFocused.value) localValue.value = val })
+const fmt = (s: unknown) => { const v = parseFloat(s as string); return isNaN(v) ? 'N/A' : v.toFixed(2) }
 </script>
 
 <style scoped>
-.project-row {
-  background-color: white;
+.priority-row:hover {
+  background-color: var(--grey-950-100);
 }
 
-.project-row:hover {
-  background-color: #f6f6f6;
-}
-
-.is-dragging {
+.priority-row--dragging {
   opacity: 0.3;
-  background-color: #eeeeee !important;
+  background-color: var(--grey-925-125);
 }
 
-.is-drop-target {
-  border-top: 3px solid #000091 !important;
-  background-color: #eeeeff !important;
+.priority-row--target {
+  border-top: 3px solid var(--blue-france-sun-113-625);
+  background-color: var(--blue-france-950-100);
 }
 
-.td-prio {
-  position: relative;
-}
-
-.score-preview {
-  position: absolute;
-  top: 50%;
-  left: 8.5rem;
-  transform: translateY(-50%);
-  background: #000091;
-  color: white;
-  font-size: 0.75rem;
-  font-weight: 600;
-  padding: 0.15rem 0.5rem;
-  border-radius: 0.25rem;
-  pointer-events: none;
-  white-space: nowrap;
-}
-
-.col-drag {
+td.priority-drag-col {
   width: 2rem;
-  padding: 0 !important;
+  padding: 0;
   vertical-align: middle;
 }
 
-.drag-bar {
+.priority-drag-handle {
   display: flex;
   flex-direction: column;
   gap: 3px;
@@ -134,29 +59,38 @@ const fmt = (s: unknown) => {
   align-items: center;
 }
 
-.drag-bar:active {
+.priority-drag-handle:active {
   cursor: grabbing;
 }
 
-.drag-bar span {
+.priority-drag-handle span {
   display: block;
   width: 14px;
   height: 2px;
-  background-color: #000091;
+  background-color: var(--blue-france-sun-113-625);
   border-radius: 1px;
 }
 
-.fr-input--sm {
+.priority-input {
   text-align: center;
   border-radius: 0;
   border: none;
-  border-bottom: 2px solid #000091;
+  border-bottom: 2px solid var(--blue-france-sun-113-625);
   font-weight: 600;
   width: 7rem;
 }
 
-.fr-input--sm:focus {
+.priority-input:focus {
   outline: none;
-  border-bottom-color: #0063cb;
+  border-bottom-color: var(--blue-france-113-625);
+}
+
+.priority-score-preview {
+  position: absolute;
+  top: 50%;
+  left: 8.5rem;
+  transform: translateY(-50%);
+  pointer-events: none;
+  white-space: nowrap;
 }
 </style>

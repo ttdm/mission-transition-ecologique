@@ -18,7 +18,8 @@
             <label class="fr-label" for="naf-division">Division</label>
             <select id="naf-division" class="fr-select" v-model="selectedDivision" @change="onDivisionChange">
               <option value="">-- Toute la section {{ selectedSection }} --</option>
-              <option v-for="d in filteredDivisions" :key="d.NIV2" :value="d.NIV2">{{ d.NIV2 }} – {{ d.label_vf }}</option>
+              <option v-for="d in filteredDivisions" :key="d.NIV2" :value="d.NIV2">{{ d.NIV2 }} – {{ d.label_vf }}
+              </option>
             </select>
           </div>
         </div>
@@ -56,6 +57,7 @@ watch(selectedNaf, (val) => emit('update:modelValue', val))
   background-color: #f5f5fe;
   border-radius: 0.25rem;
 }
+
 .naf-arrow {
   font-size: 1.5rem;
   color: #6a6af4;
