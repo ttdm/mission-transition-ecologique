@@ -36,6 +36,7 @@ export default <DefineNuxtConfig>defineNuxtConfig({
       ]
     }
   },
+
   routeRules: {
     '/_nuxt/**': {
       headers: {
@@ -150,7 +151,7 @@ export default <DefineNuxtConfig>defineNuxtConfig({
     '@pinia/nuxt',
     'nuxt-security',
     'vue-dsfr-nuxt-module',
-    '@sentry/nuxt/module',
+    //'@sentry/nuxt/module', on commente pour faire fonctionner avec npm run dev
     '@nuxtjs/sitemap',
     '@nuxtjs/robots',
     '@nuxt/scripts',
@@ -204,6 +205,8 @@ export default <DefineNuxtConfig>defineNuxtConfig({
     }
   },
   runtimeConfig: {
+    baserowToken: Config.baserowToken,
+    baserowTableId: Config.baserowTableId,
     public: {
       environment: Config.SERVER_ENVIRONMENT,
       sentry: {
