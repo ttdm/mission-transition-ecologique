@@ -7,8 +7,9 @@
       <div class="priority-drag-handle"><span></span><span></span><span></span></div>
     </td>
     <td style="position: relative">
-      <input v-model.number="localValue" type="number" class="fr-input priority-input" step="0.01" min="0"
-        @focus="isFocused = true" @blur="isFocused = false; $emit('update', String(localValue))"
+      <input v-model="localValue" type="text" inputmode="decimal" class="fr-input priority-input"
+        @focus="isFocused = true"
+        @blur="isFocused = false; $emit('update', localValue.replace(',', '.'))"
         @keydown.enter="($event.target as HTMLInputElement).blur()" />
       <span v-if="isDropTarget && prospectiveScore !== null"
         class="fr-badge fr-badge--info priority-score-preview">→ {{ prospectiveScore }}</span>
@@ -23,9 +24,9 @@
 import type { ProjectRow } from '~/types/baserow'
 const props = defineProps<{ project: ProjectRow; isDragging: boolean; isDropTarget: boolean; prospectiveScore: number | null }>()
 defineEmits<{ (e: 'update', v: string): void; (e: 'dragstart'): void; (e: 'dragover'): void; (e: 'dragleave'): void; (e: 'drop'): void; (e: 'dragend'): void }>()
-const localValue = ref(props.project.currentPriority)
+const localValue = ref(String(props.project.currentPriority))
 const isFocused = ref(false)
-watch(() => props.project.currentPriority, (val) => { if (!isFocused.value) localValue.value = val })
+watch(() => props.project.currentPriority, (val) => { if (!isFocused.value) localValue.value = String(val) })
 const fmt = (s: unknown) => { const v = parseFloat(s as string); return isNaN(v) ? 'N/A' : v.toFixed(2) }
 </script>
 
